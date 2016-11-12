@@ -9,6 +9,20 @@
   color: white;
 }
 
+.cell {
+  padding: 5px;
+}
+
+.filled-cell {
+  padding: 5px;
+  background-color: #000;
+}
+
+.empty-cell {
+  padding: 5px;
+  background-color: #222;
+}
+
 .App-intro {
   font-size: large;
 }

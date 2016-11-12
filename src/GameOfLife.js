@@ -6,17 +6,33 @@ class GameOfLife extends Component {
   constructor() {
     super();
     this.state = {
-      world: []
+      world: [],
+      ticker: false
     }
   }
   componentWillMount() {
-    // init world
-    let size = 10;
+    const size = 30;
+    this.initWorld(size, false);
+  }
+  initWorld = (size, content) => {
     let world = [];
-    _.range(size).forEach( (y) => {
-      world.push(new Array(size).fill(true))
+    _.range(size).forEach( () => {
+      world.push(new Array(size).fill(content));
     });
-    this.setState({world: world})
+    world = this.seedWorld(world, 200);
+    this.setState({world: world});
+  }
+  seedWorld = (world, seeds) => {
+    const size = world.length;
+    let x,y;
+    _.range(seeds).forEach( () => {
+      x = Math.floor((Math.random() * size));
+      y = Math.floor((Math.random() * size));
+      console.log(x,y)
+      console.log(world)
+      world[x][y] = true;
+    });
+    return world;
   }
   tick = () => {
     let nextWorld = this.state.world;
@@ -26,16 +42,23 @@ class GameOfLife extends Component {
         if (element) {
           if (neighbours < 2 || neighbours > 3) {
             nextWorld[x][y] = false;
-            console.log('deleting', x, y)
           }
-        } else if (element == false && neighbours === 3) {
+        } else if (neighbours === 3) {
           nextWorld[x][y] = true;
-          console.log('spawning', x, y)
         }
       });
     });
     this.setState({world: nextWorld})
     console.log(nextWorld);
+  }
+  run = () => {
+    if (this.state.ticker) {
+      clearInterval(this.state.ticker)
+      this.setState({ticker: false})
+    } else{
+      let ticker = setInterval(this.tick, 500);
+      this.setState({ticker: ticker});
+    }
   }
   getNeighbours = (x,y) => {
     let numNeighbours = 0;
@@ -74,8 +97,9 @@ class GameOfLife extends Component {
       <div>
         Game of life!
         <button onClick={this.tick}>Tick</button>
-        { this.state.world.map( (row) => (
-          <Row row={row} />
+        <button onClick={this.run}>{this.state.ticker ? 'Pause' : 'Run'}</button>
+        { this.state.world.map( (row, index) => (
+          <Row key={index} row={row} />
         )) }
       </div>
     );
@@ -84,11 +108,14 @@ class GameOfLife extends Component {
 
 const Row = ({row}) => (
   <div>
-    {row.map( (item) => {
-      return item ? '# ' : '_ '
-    })}
+    {row.map( (item) => (
+      <Cell item={item} />
+    ))}
   </div>
 )
 
+const Cell = ({item}) => (
+  <span className={item ? 'filled-cell' : 'empty-cell'} />
+)
 
 export default GameOfLife;
