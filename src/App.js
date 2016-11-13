@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import GameOfLife from './GameOfLife'
-import logo from './logo.svg';
 import './App.css';
 
 class App extends Component {
@@ -14,7 +13,7 @@ class App extends Component {
           Conway's famous Game of Life simulation, built in React.js
         </p>
 
-        <GameOfLife />
+        <GameOfLife initialSize={20} initialSeeds={100} speed={400} />
 
       </div>
     );

@@ -7,19 +7,23 @@ class GameOfLife extends Component {
     super();
     this.state = {
       world: [],
-      ticker: false
+      ticker: false,
+      ticks: 0
     }
   }
   componentWillMount() {
-    const size = 30;
-    this.initWorld(size, false);
+    this.initWorld(this.props.initialSize, false);
   }
   initWorld = (size, content) => {
     let world = [];
     _.range(size).forEach( () => {
-      world.push(new Array(size).fill(content));
+        let row = []
+        _.range(size).forEach( () => {
+          row.push(content);
+        });
+        world.push(row);
     });
-    world = this.seedWorld(world, 200);
+    world = this.seedWorld(world, this.props.initialSeeds);
     this.setState({world: world});
   }
   seedWorld = (world, seeds) => {
@@ -28,14 +32,17 @@ class GameOfLife extends Component {
     _.range(seeds).forEach( () => {
       x = Math.floor((Math.random() * size));
       y = Math.floor((Math.random() * size));
-      console.log(x,y)
-      console.log(world)
       world[x][y] = true;
     });
     return world;
   }
   tick = () => {
-    let nextWorld = this.state.world;
+    this.setState({ticks: this.state.ticks + 1});
+
+    let nextWorld = this.state.world.map(function(arr) {
+      return arr.slice();
+    });
+
     this.state.world.forEach( (row, x) => {
       row.forEach((element, y) => {
         let neighbours = this.getNeighbours(x,y)
@@ -48,21 +55,26 @@ class GameOfLife extends Component {
         }
       });
     });
+    if (_.isEqual(this.state.world, nextWorld)) {
+      this.stopRun();
+    }
     this.setState({world: nextWorld})
-    console.log(nextWorld);
   }
-  run = () => {
+  toggleRun = () => {
     if (this.state.ticker) {
-      clearInterval(this.state.ticker)
-      this.setState({ticker: false})
+      this.stopRun();
     } else{
-      let ticker = setInterval(this.tick, 500);
+      let ticker = setInterval(this.tick, this.props.speed);
       this.setState({ticker: ticker});
     }
   }
+  stopRun = () => {
+    clearInterval(this.state.ticker)
+    this.setState({ticker: false})
+  }
   getNeighbours = (x,y) => {
     let numNeighbours = 0;
-    let world = this.state.world
+    let world = this.state.world;
     //check neighbours on same x
     if (world[x-1] && world[x-1][y]) {
       numNeighbours += 1;
@@ -92,30 +104,36 @@ class GameOfLife extends Component {
     }
     return numNeighbours;
   }
+  toggleCell = (x,y) => {
+    let world = this.state.world;
+    world[x][y] = !world[x][y];
+    this.setState({world: world})
+  }
   render() {
     return (
       <div>
-        Game of life!
-        <button onClick={this.tick}>Tick</button>
-        <button onClick={this.run}>{this.state.ticker ? 'Pause' : 'Run'}</button>
-        { this.state.world.map( (row, index) => (
-          <Row key={index} row={row} />
-        )) }
+        <div className='controls'>
+          Game of life!
+          <button onClick={this.tick}>Tick</button>
+          <button onClick={this.toggleRun}>{this.state.ticker ? 'Pause' : 'Run'}</button>
+          <button onClick={this.initWorld.bind(this, 20, false)}>Reset</button>
+
+        </div>
+        <div className='world'>
+          { this.state.world.map( (row, x) => (
+            <div key={x}>
+              {
+                row.map( (item, y) => (
+                  <span key={y} onClick={this.toggleCell.bind(null,x,y)} className={item ? 'filled-cell' : 'empty-cell'} />
+                ))
+              }
+            </div>
+          )) }
+        </div>
       </div>
     );
   }
 }
 
-const Row = ({row}) => (
-  <div>
-    {row.map( (item) => (
-      <Cell item={item} />
-    ))}
-  </div>
-)
-
-const Cell = ({item}) => (
-  <span className={item ? 'filled-cell' : 'empty-cell'} />
-)
 
 export default GameOfLife;
